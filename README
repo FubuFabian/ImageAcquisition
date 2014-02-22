@@ -1,0 +1,14 @@
+Created by Fabian Torres Robles
+CCADET UNAM, Mexico 
+15/01/14
+
+This program is used to acquire digital tracked 2D ultrasound images using and Epiphan dvi2usb framegrabber.
+
+It is needed to pre-build
+- ITK
+- VTK
+- IGSTK
+- QT
+- LSQR
+- Epiphan SDK
+
