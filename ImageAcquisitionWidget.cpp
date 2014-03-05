@@ -53,6 +53,7 @@ ImageAcquisitionWidget::ImageAcquisitionWidget(QWidget *parent) :
 
 
     ui->numberImages->setText("100");
+	ui->waitSeconds->setText("0");
 
 	redPal = QPalette(ui->trackingLabel->palette());
 	greenPal = QPalette(ui->trackingLabel->palette());
@@ -157,6 +158,15 @@ void ImageAcquisitionWidget::singleImage()
 
 void ImageAcquisitionWidget::multipleImages()
 {
+
+	int seconds = ui->waitSeconds->text().toInt();
+
+	for(int i = 1; i<=seconds; i++){
+		QTest::qWait(999);
+		QString str0 = QString::number(seconds-i);
+		ui->waitSeconds->setText(str0);
+	}
+
 	ui->trackingLabel->setPalette(greenPal);
 	ui->saveImagesBtn->setEnabled(true);
 	ui->clearBtn->setEnabled(true);
@@ -242,7 +252,8 @@ void ImageAcquisitionWidget::saveImages()
 
 void ImageAcquisitionWidget::acquireMultipleImages()
 {
-		ui->trackingLabel->setPalette(redPal);		
+	
+	ui->trackingLabel->setPalette(redPal);		
 }
 
 

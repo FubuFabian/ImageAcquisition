@@ -45,48 +45,6 @@ void ImageAcquisition::configTracker(std::string referenceToolFilename, std::str
 
 	std::cout<<std::endl<<"-Reference Tracker Tool ID: "<<referenceTool->GetTrackerToolIdentifier()<<std::endl;
 	std::cout<<"-Ultrasound Tracker Probe Tool ID: "<<ultrasoundProbeTool->GetTrackerToolIdentifier()<<std::endl;
-
-	std::cout<<std::endl;
-	std::cout<<"Loading Probe Calibration Data"<<std::endl;
-
-	std::vector<double> probeCalibrationData;
-	probeCalibrationData.reserve(8);
-
-	if (!probeCalibrationFilename.isEmpty())
-    {
-        QFile file(probeCalibrationFilename);
-        if (!file.open(QIODevice::ReadOnly))
-           return;
-
-		QTextStream stream(&file);
-        QString line;
-
-		for(int i=0;i<8;i++)
-        {
-			line = stream.readLine();       
-			probeCalibrationData.push_back(line.toDouble());
-        }
-		 file.close(); 	
-	}else
-	{
-		 std::cout<<"No Probe Calibration Data Loaded"<<std::endl;
-	}
-
-	igstk::Transform::ErrorType errorValue;
-	errorValue=10;
-
-	double validityTimeInMilliseconds;
-	validityTimeInMilliseconds = igstk::TimeStamp::GetLongestPossibleTime();
-
-	TransformType::VectorType probeTranslation;
-	TransformType::VersorType probeRotation;
-
-	probeTranslation[0] = probeCalibrationData[0];
-	probeTranslation[1] = probeCalibrationData[1];
-	probeTranslation[2] = probeCalibrationData[2];
-    probeRotation.Set(probeCalibrationData[3], probeCalibrationData[4], probeCalibrationData[5], 0.0);
-	probeCalibrationTransform.SetTranslationAndRotation(probeTranslation, probeRotation, errorValue, validityTimeInMilliseconds);
-
 	
 	imageAcquisitionWidget->SetTracker(tracker);
 
