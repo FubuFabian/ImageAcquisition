@@ -18,9 +18,12 @@
     <widget class="QWidget" name="ultrasoundDisplay" native="true"/>
    </item>
    <item row="0" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="20,0,40">
+    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="20,0,0">
      <item>
-      <widget class="QWidget" name="imagesDisplay" native="true"/>
+      <widget class="QWidget" name="imagesDisplay" native="true">
+       <zorder></zorder>
+       <zorder></zorder>
+      </widget>
      </item>
      <item>
       <widget class="QSlider" name="imageSlider">
@@ -59,19 +62,6 @@
           <string>Save Images</string>
          </property>
         </widget>
-       </item>
-       <item row="18" column="1">
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_2">
@@ -163,20 +153,6 @@
          </property>
         </spacer>
        </item>
-       <item row="15" column="1">
-        <widget class="QLabel" name="trackingLabel">
-         <property name="text">
-          <string>Acquiring Images</string>
-         </property>
-        </widget>
-       </item>
-       <item row="15" column="0">
-        <widget class="QPushButton" name="clearBtn">
-         <property name="text">
-          <string>Clear Images</string>
-         </property>
-        </widget>
-       </item>
        <item row="11" column="0">
         <widget class="QLabel" name="label_4">
          <property name="text">
@@ -186,6 +162,43 @@
        </item>
        <item row="11" column="1">
         <widget class="QLineEdit" name="waitSeconds"/>
+       </item>
+       <item row="18" column="1">
+        <widget class="QPushButton" name="clearBtn">
+         <property name="text">
+          <string>Clear Images</string>
+         </property>
+        </widget>
+       </item>
+       <item row="16" column="1">
+        <widget class="QPushButton" name="recordBtn">
+         <property name="text">
+          <string>Record</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="16" column="0">
+        <widget class="QLabel" name="trackingLabel">
+         <property name="text">
+          <string>Acquiring Images</string>
+         </property>
+        </widget>
+       </item>
+       <item row="17" column="1">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
@@ -204,7 +217,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>927</x>
-     <y>555</y>
+     <y>505</y>
     </hint>
     <hint type="destinationlabel">
      <x>1042</x>
@@ -220,7 +233,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1033</x>
-     <y>555</y>
+     <y>505</y>
     </hint>
     <hint type="destinationlabel">
      <x>1039</x>
@@ -236,7 +249,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>927</x>
-     <y>460</y>
+     <y>365</y>
     </hint>
     <hint type="destinationlabel">
      <x>1041</x>
@@ -252,7 +265,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1033</x>
-     <y>460</y>
+     <y>365</y>
     </hint>
     <hint type="destinationlabel">
      <x>1044</x>
@@ -299,8 +312,8 @@
    <slot>displaySelectedImage(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>863</x>
-     <y>244</y>
+     <x>1034</x>
+     <y>143</y>
     </hint>
     <hint type="destinationlabel">
      <x>814</x>
@@ -315,12 +328,28 @@
    <slot>clearImages()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>872</x>
-     <y>574</y>
+     <x>1033</x>
+     <y>622</y>
     </hint>
     <hint type="destinationlabel">
      <x>815</x>
      <y>541</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>recordBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>ImageAcquisitionWidget</receiver>
+   <slot>recordImages(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1002</x>
+     <y>533</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1045</x>
+     <y>564</y>
     </hint>
    </hints>
   </connection>
@@ -334,5 +363,6 @@
   <slot>saveImages()</slot>
   <slot>displaySelectedImage(int)</slot>
   <slot>clearImages()</slot>
+  <slot>recordImages(bool)</slot>
  </slots>
 </ui>

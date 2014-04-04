@@ -54,9 +54,9 @@ public:
 	/** \brief Set the instruments coords in the widget*/
 	void setCoords(std::vector<double>);
 
-	void acquireMultipleImages();
-
 	void displayImages();
+
+	void imageTaken();
 
 private:
     Ui::ImageAcquisitionWidget *ui;
@@ -72,10 +72,18 @@ private:
 	std::vector<VersorType> rotationStack;
 	std::vector<VectorType> translationStack;
 
+	int numberOfImages;
+
+	bool multipleImagesFlag;
+	bool recordFlag;
+
+	void imagesAcquired();
+
 private slots:
 
     void singleImage();
     void multipleImages();
+	void recordImages(bool);
 	void configTracker();
 	void startTracking();
 	void Quit();

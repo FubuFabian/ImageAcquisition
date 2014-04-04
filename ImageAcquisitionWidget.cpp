@@ -52,7 +52,7 @@ ImageAcquisitionWidget::ImageAcquisitionWidget(QWidget *parent) :
 	ui->rotW->setText("");
 
 
-    ui->numberImages->setText("100");
+    ui->numberImages->setText("0");
 	ui->waitSeconds->setText("0");
 
 	redPal = QPalette(ui->trackingLabel->palette());
@@ -64,6 +64,9 @@ ImageAcquisitionWidget::ImageAcquisitionWidget(QWidget *parent) :
 
 	ui->imageSlider->hide();
 	ui->imageSlider->setTickInterval(1);
+
+	multipleImagesFlag = false;
+	recordFlag = false;
 }
 
 ImageAcquisitionWidget::~ImageAcquisitionWidget()
@@ -160,6 +163,7 @@ void ImageAcquisitionWidget::multipleImages()
 {
 
 	int seconds = ui->waitSeconds->text().toInt();
+	multipleImagesFlag = true;
 
 	for(int i = 1; i<=seconds; i++){
 		QTest::qWait(999);
@@ -168,11 +172,31 @@ void ImageAcquisitionWidget::multipleImages()
 	}
 
 	ui->trackingLabel->setPalette(greenPal);
-	ui->saveImagesBtn->setEnabled(true);
-	ui->clearBtn->setEnabled(true);
-	this->imageAcquisition->setMultipleImagesFlagTrue(ui->numberImages->text().toInt());
+	numberOfImages = ui->numberImages->text().toInt();
+	this->imageAcquisition->setMultipleImagesFlag(true);
 }
 
+void ImageAcquisitionWidget::recordImages(bool record)
+{
+	if(record){
+		int seconds = ui->waitSeconds->text().toInt();
+		recordFlag = true;
+
+		for(int i = 1; i<=seconds; i++){
+			QTest::qWait(999);
+			QString str0 = QString::number(seconds-i);
+			ui->waitSeconds->setText(str0);
+		}
+
+		ui->trackingLabel->setPalette(greenPal);
+		numberOfImages = 0;
+		this->imageAcquisition->setMultipleImagesFlag(true);	
+	}else{
+		recordFlag = false;
+		this->imagesAcquired();
+	}
+
+}
 void ImageAcquisitionWidget::saveImages()
 {
 	typedef ::itk::Vector<double, 3>    VectorType;
@@ -250,10 +274,14 @@ void ImageAcquisitionWidget::saveImages()
 
 }
 
-void ImageAcquisitionWidget::acquireMultipleImages()
-{
-	
-	ui->trackingLabel->setPalette(redPal);		
+void ImageAcquisitionWidget::imagesAcquired()
+{	
+	this->imageAcquisition->setMultipleImagesFlag(false);
+	this->imageAcquisition->imagesAcquired();
+	ui->saveImagesBtn->setEnabled(true);
+	ui->clearBtn->setEnabled(true);
+	ui->trackingLabel->setPalette(redPal);
+	ui->numberImages->setText("0");
 }
 
 
@@ -325,4 +353,22 @@ void ImageAcquisitionWidget::clearImages()
 
 }
 
+void ImageAcquisitionWidget::imageTaken()
+{
+	if(multipleImagesFlag){
+		--numberOfImages;
+		QString str0 = QString::number(numberOfImages);
+		ui->numberImages->setText(str0);
+
+		if(numberOfImages == 0){
+			multipleImagesFlag = false;
+			this->imagesAcquired();
+		}
+
+	}else if(recordFlag){
+		++numberOfImages;
+		QString str0 = QString::number(numberOfImages);
+		ui->numberImages->setText(str0);
+	}
+}
 

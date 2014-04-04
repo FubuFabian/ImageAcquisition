@@ -18,10 +18,16 @@
 #include <vtkSmartPointer.h>
 #include <vtkImageFlip.h>
 
+#include <itkImage.h>
+#include <itkImageIOBase.h>
+
 using namespace std;
 
 class ImageAcquisition
 {
+
+	typedef itk::Image<unsigned char,2> ImageType;
+
     typedef igstk::PolarisTrackerTool         TrackerToolType;
     typedef TrackerToolType::TransformType    TransformType;
     typedef igstk::TransformObserver          ObserverType;
@@ -57,9 +63,9 @@ public:
 
 	void setSingleImageFlagTrue();
 
-	void setMultipleImagesFlagTrue(int);
+	void setMultipleImagesFlag(bool);
 
-	void setNumberOfImages(int);
+	void imagesAcquired();
 
 	std::vector< vtkSmartPointer<vtkImageData> > getImages();
 	std::vector<VersorType> getRotations();
@@ -76,6 +82,7 @@ private:
 	int numberOfImages;
 
 	unsigned int frameSize[3];
+	unsigned int imageSize;
 
 	TransformType identityTransform; ///<Transformation for the tracked objects
 
@@ -97,12 +104,17 @@ private:
 
 	void stopImaging();
 
-	void addImageToStack(vtkImageData *);
+	void addImageToStack(unsigned char *);
 
-	void addImagesToStack(std::vector<vtkImageData *>);
+	void addImagesToStack(std::vector<unsigned char *>);
+	/**
+    * \brief convert an itk image to a vtk image
+    * [out] a vtk image
+    */
+    vtkSmartPointer<vtkImageData> convertToVTKImage(ImageType::Pointer itkImage);
 
 	std::vector< vtkSmartPointer<vtkImageData> > imageStack;
-	std::vector<vtkImageData *> imageTempStack;
+	std::vector<unsigned char *> imageDataPtrStack;
 	std::vector<VectorType> translationStack;
 	std::vector<VersorType> rotationStack;
 

@@ -1,5 +1,6 @@
 #include "ImageAcquisition.h"
 #include "PolarisTracker.h"
+#include "itkImageToVTKImageFilter.h"
 
 #include <vtkBMPWriter.h>
 
@@ -11,7 +12,7 @@
 
 #include <igstkImageSpatialObject.h>
 
-
+#include <itkImportImageFilter.h>
 
 void ImageAcquisition::configTracker(std::string referenceToolFilename, std::string ultrasoundProbeFilename, 
 							std::string needleFilename, std::string pointerFilename, QString probeCalibrationFilename,
@@ -73,20 +74,17 @@ void ImageAcquisition::startTracking()
 			ultrasoundProbeTool->RequestComputeTransformTo(referenceTool);
 
 			if(singleImageFlag){
+
 				if (coordSystemAObserverUltrasoundProbe->GotTransform())
 				{
+					unsigned char * imageDataPtr = m_VideoFrame->GetImagePtr();
+
 					usTransform = coordSystemAObserverUltrasoundProbe->GetTransform();
                     usTransform = TransformType::TransformCompose(usTransform,probeCalibrationTransform);
 					usTranslation = usTransform.GetTranslation();
 					usRotation = usTransform.GetRotation();
 
-
-					m_VideoFrame->RequestGetVTKImage();
-
-					vtkImageData * vtkImage = vtkImageData::New();
-					vtkImage->DeepCopy(m_VideoFrame->GetImageData());
-
-					this->addImageToStack(vtkImage);
+					this->addImageToStack(imageDataPtr);
 					translationStack.push_back(usTranslation);
 					rotationStack.push_back(usRotation);
 
@@ -95,33 +93,22 @@ void ImageAcquisition::startTracking()
 					singleImageFlag = false;
 				}
 			}else if(multipleImagesFlag){
+
 				if (coordSystemAObserverUltrasoundProbe->GotTransform())
 				{
+					unsigned char * imageDataPtr = new unsigned char[imageSize];
+					memcpy(imageDataPtr,m_VideoFrame->GetImagePtr(),imageSize);
+					imageDataPtrStack.push_back(imageDataPtr);
+
 					usTransform = coordSystemAObserverUltrasoundProbe->GetTransform();
                     usTransform = TransformType::TransformCompose(usTransform,probeCalibrationTransform);
 					usTranslation = usTransform.GetTranslation();
 					usRotation = usTransform.GetRotation();
 
-					m_VideoFrame->RequestGetVTKImage();
-
-					vtkImageData * vtkImage = vtkImageData::New();
-					vtkImage->DeepCopy(m_VideoFrame->GetImageData());
-					imageTempStack.push_back(vtkImage);
-
 					translationStack.push_back(usTranslation);
 					rotationStack.push_back(usRotation);
 
-					numberOfTakenImages++;
-
-					if(numberOfTakenImages == numberOfImages){
-						this->addImagesToStack(imageTempStack);
-						imageAcquisitionWidget->acquireMultipleImages();
-						imageAcquisitionWidget->displayImages();
-						multipleImagesFlag = false;
-						numberOfTakenImages = 0;
-						imageTempStack.clear();
-					}
-
+					this->imageAcquisitionWidget->imageTaken();
 				}
 		    }
                        
@@ -185,6 +172,8 @@ void ImageAcquisition::startImaging()
 	frameSize[0] = videoImager->FrameSize[0];
 	frameSize[1] = videoImager->FrameSize[1];
 	frameSize[2] = 1;
+
+	imageSize = frameSize[0]*frameSize[1]*frameSize[2];
 	
 	m_VideoFrame = VideoFrameObjectType::New();
 	m_VideoFrame->SetWidth(frameSize[0]);
@@ -215,20 +204,14 @@ void ImageAcquisition::stopImaging()
     videoImager->RequestClose();
 }
 
-void ImageAcquisition::setMultipleImagesFlagTrue(int numberOfImages)
+void ImageAcquisition::setMultipleImagesFlag(bool flag)
 {
-	this->multipleImagesFlag = true;
-	this->numberOfImages = numberOfImages;
+	this->multipleImagesFlag = flag;
 }
 
 void ImageAcquisition::setSingleImageFlagTrue()
 {
 	this->singleImageFlag = true;
-}
-
-void ImageAcquisition::setNumberOfImages(int numberOfImages)
-{
-	this->numberOfImages = numberOfImages;
 }
 
 std::vector< vtkSmartPointer<vtkImageData> > ImageAcquisition::getImages()
@@ -248,10 +231,28 @@ std::vector<VectorType> ImageAcquisition::getTranslations()
 	return this->translationStack;
 }
 
-void ImageAcquisition::addImageToStack(vtkImageData * vtkImage)
-{
-	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
-	imageData = vtkImage;
+void ImageAcquisition::addImageToStack(unsigned char * imageDataPtr)
+{	
+	ImageType::SizeType imageSize;
+	imageSize[0] = frameSize[0];
+	imageSize[1] = frameSize[1];
+
+	ImageType::IndexType imageStart;
+	imageStart.Fill(0);
+
+	ImageType::RegionType imageRegion;
+	imageRegion.SetSize(imageSize);
+	imageRegion.SetIndex(imageStart);
+
+	itk::ImportImageFilter<unsigned char,2>::Pointer importFilter = itk::ImportImageFilter<unsigned char,2>::New();
+	importFilter->SetRegion(imageRegion);
+	importFilter->SetImportPointer(reinterpret_cast<ImageType::PixelType*>(imageDataPtr),
+																		frameSize[0]*frameSize[1], false);
+	importFilter->Update();
+
+	ImageType::Pointer itkImage = importFilter->GetOutput();
+
+	vtkSmartPointer<vtkImageData> imageData = convertToVTKImage(itkImage);
 
 	flipYFilter = vtkSmartPointer<vtkImageFlip>::New();	
 	flipYFilter->SetFilteredAxis(1); 
@@ -261,13 +262,35 @@ void ImageAcquisition::addImageToStack(vtkImageData * vtkImage)
 	imageStack.push_back(flipYFilter->GetOutput());
 }
 
-void ImageAcquisition::addImagesToStack(std::vector<vtkImageData *> vtkImageStack)
+void ImageAcquisition::addImagesToStack(std::vector<unsigned char *> imageDataPtrStack)
 {
-	for(int i = 0; i<vtkImageStack.size(); i++)
+
+	std::cout<<imageDataPtrStack.size();
+	for(int i = 0; i<imageDataPtrStack.size(); i++)
 	{
+		ImageType::SizeType imageSize;
+		imageSize[0] = frameSize[0];
+		imageSize[1] = frameSize[1];
+
+		ImageType::IndexType imageStart;
+		imageStart.Fill(0);
+
+		ImageType::RegionType imageRegion;
+		imageRegion.SetSize(imageSize);
+		imageRegion.SetIndex(imageStart);
+
+		itk::ImportImageFilter<unsigned char,2>::Pointer importFilter = itk::ImportImageFilter<unsigned char,2>::New();
+		importFilter->SetRegion(imageRegion);
+		importFilter->SetImportPointer(reinterpret_cast<ImageType::PixelType*>(imageDataPtrStack.at(i)),
+																		frameSize[0]*frameSize[1], false);
+		importFilter->Update();
+
+		ImageType::Pointer itkImage = ImageType::New();
+	    itkImage = importFilter->GetOutput();
+
 		vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
-		imageData = vtkImageStack.at(i);
-		
+		imageData = convertToVTKImage(itkImage);
+
 		flipYFilter = vtkSmartPointer<vtkImageFlip>::New();	
 		flipYFilter->SetFilteredAxis(1); 
 		flipYFilter->SetInput(imageData);
@@ -282,4 +305,25 @@ void ImageAcquisition::clearAcquiredImages()
 	imageStack.clear();
 	rotationStack.clear();
 	translationStack.clear();
+}
+
+typedef itk::Image<unsigned char *,2> Imagetype;
+vtkSmartPointer<vtkImageData> ImageAcquisition::convertToVTKImage(ImageType::Pointer itkImage)
+{   
+    typedef itk::ImageToVTKImageFilter<ImageType> VTKConverterType;
+    VTKConverterType::Pointer vtkConverter = VTKConverterType::New();
+    vtkConverter->SetInput(itkImage);
+    vtkConverter->Update();
+    
+    vtkSmartPointer<vtkImageData> tempImage = vtkSmartPointer<vtkImageData>::New();
+    tempImage->DeepCopy(vtkConverter->GetOutput());
+    
+    return tempImage;
+}
+
+void ImageAcquisition::imagesAcquired()
+{
+	this->addImagesToStack(imageDataPtrStack);
+	imageAcquisitionWidget->displayImages();
+	imageDataPtrStack.clear();
 }

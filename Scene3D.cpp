@@ -230,7 +230,7 @@ void Scene3D::startTracking()
 			VectorType                usPosition;
 			VectorType                needlePosition;
                         
-                        VersorType                needleRotation;
+            VersorType                needleRotation;
                         
 
   
@@ -248,7 +248,7 @@ void Scene3D::startTracking()
 			{
                                 
 				usTransform = coordSystemAObserverUltrasoundProbe->GetTransform();
-                                usTransform = TransformType::TransformCompose(usTransform,probeCalibrationTransform);
+                usTransform = TransformType::TransformCompose(usTransform,probeCalibrationTransform);
 				usPosition = usTransform.GetTranslation();
 				
 				coords.push_back(usPosition[0]);

@@ -154,14 +154,17 @@ bool EpiphanVideoImager::Initialize( void )
     return FAILURE;
   }
 
-  this->MAXIMUM_FREQUENCY = vm.vfreq/1000;
-  if (this->ValidateSpecifiedFrequency(this->GetAcquisitionRate()))
-  {
-	  FrmGrab_SetMaxFps((FrmGrabber*)this->FrameGrabber,this->GetAcquisitionRate());
-  }else
-  {
-	  FrmGrab_SetMaxFps((FrmGrabber*)this->FrameGrabber,this->MAXIMUM_FREQUENCY);
-  }
+  this->MAXIMUM_FREQUENCY = 60;
+  FrmGrab_SetMaxFps((FrmGrabber*)this->FrameGrabber,this->MAXIMUM_FREQUENCY);
+
+  //this->MAXIMUM_FREQUENCY = vm.vfreq/1000;
+  //if (this->ValidateSpecifiedFrequency(this->GetAcquisitionRate()))
+  //{
+	 // FrmGrab_SetMaxFps((FrmGrabber*)this->FrameGrabber,this->GetAcquisitionRate());
+  //}else
+  //{
+  //	  FrmGrab_SetMaxFps((FrmGrabber*)this->FrameGrabber,this->MAXIMUM_FREQUENCY);
+  //}
 
   if (vm.width==0 || vm.height==0)
   {
