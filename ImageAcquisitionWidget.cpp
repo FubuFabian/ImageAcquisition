@@ -38,6 +38,7 @@ ImageAcquisitionWidget::ImageAcquisitionWidget(QWidget *parent) :
 	ui->startTrackingBtn->setEnabled(false);
 	ui->singleImageBtn->setEnabled(false);
 	ui->multipleImageBtn->setEnabled(false);
+	ui->recordBtn->setEnabled(false);
 	ui->saveImagesBtn->setEnabled(false);
 	ui->clearBtn->setEnabled(false);
 
@@ -94,6 +95,7 @@ void ImageAcquisitionWidget::startTracking()
 {
 	ui->singleImageBtn->setEnabled(true);
 	ui->multipleImageBtn->setEnabled(true);
+	ui->recordBtn->setEnabled(true);
     this->m_Tracker->RequestStartTracking();
 	imageAcquisition->startTracking();
 }
